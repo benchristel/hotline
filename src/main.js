@@ -37,6 +37,7 @@ if (mode === HOST) {
     peer.on("call", function(call) {
       $("button#call").removeAttribute("disabled")
       call.on("stream", playStream)
+      call.on("error", console.error)
 
       getNextClick($("button#call")).then(() => {
         getMicrophoneAudioStream()
