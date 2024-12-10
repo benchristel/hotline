@@ -16,9 +16,7 @@ const HOST = "host"
 const CALL = "call"
 const mode = window.location.hash.length > 1 ? HOST : CALL
 
-const button = $("button#call")
-
-async function getNextButtonClick() {
+async function getNextClick(button) {
   return new Promise((resolve) => {
     button.addEventListener("click", onClick)
     function onClick() {
@@ -30,16 +28,16 @@ async function getNextButtonClick() {
 
 if (mode === HOST) {
   console.log("starting host")
-  $("button").innerText = "Answer"
+  $("button#call").innerText = "Answer"
   $("input").parentElement.removeChild($("input"))
   sha256(window.location.hash.slice(1)).then((hostId) => {
     console.log("hostId", hostId)
     const peer = new Peer(hostId);
     peer.on("call", function(call) {
-      button.removeAttribute("disabled")
+      $("button#call").removeAttribute("disabled")
       call.on("stream", playStream)
 
-      getNextButtonClick().then(() => {
+      getNextClick($("button#call")).then(() => {
         getMicrophoneAudioStream()
           .then(micStream => call.answer(micStream))
           .catch((err) => console.log("Could not get microphone audio", err))
@@ -49,8 +47,8 @@ if (mode === HOST) {
 }
 
 if (mode === CALL) {
-  button.removeAttribute("disabled")
-  getNextButtonClick().then(() => {
+  $("button#call").removeAttribute("disabled")
+  getNextClick($("button#call")).then(() => {
     const peer = new Peer();
     Promise.all([
       sha256($("input").value),
