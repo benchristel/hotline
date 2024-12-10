@@ -60,9 +60,7 @@ if (mode === CALL) {
     ]).then(([hostId, micStream]) => {
       console.log("calling peer", hostId)
       const call = peer.call(hostId, micStream)
-      call.on('stream', remoteStream => {
-        playStream(remoteStream)
-      })
+      call.on("stream", playStream)
     })
   })
 }
