@@ -30,23 +30,38 @@ if (mode === HOST) {
   console.log("starting host")
   $("button#call").innerText = "Answer"
   $("input").parentElement.removeChild($("input"))
-  sha256(window.location.hash.slice(1)).then((hostId) => {
-    console.log("hostId", hostId)
-    const peer = new Peer(hostId);
-    peer.on("error", console.error)
-    peer.on("call", function(call) {
-      $("button#call").removeAttribute("disabled")
-      call.on("stream", playStream)
-      call.on("error", console.error)
-      call.on("close", () => $("button#call").setAttribute("disabled", "true"))
 
-      getNextClick($("button#call")).then(() => {
-        getMicrophoneAudioStream()
-          .then(micStream => call.answer(micStream))
-          .catch((err) => console.error("Could not get microphone audio", err))
+  const audioCtx = new AudioContext();
+  let micGain;
+  getMicrophoneAudioStream()
+    .then(micStream => {
+      const micAudioSource = audioCtx.createMediaStreamSource(micStream)
+      micGain = audioCtx.createGain()
+      micGain.gain.setValueAtTime(0, 0)
+      micAudioSource.connect(micGain)
+
+      const micWithGain = audioCtx.createMediaStreamDestination()
+      micGain.connect(micWithGain)
+
+      sha256(window.location.hash.slice(1)).then((hostId) => {
+        console.log("hostId", hostId)
+        const peer = new Peer(hostId);
+        peer.on("error", console.error)
+        peer.on("call", function(call) {
+          $("button#call").removeAttribute("disabled")
+
+          call.on("stream", playStream)
+          call.on("error", console.error)
+          call.on("close", () => $("button#call").setAttribute("disabled", "true"))
+          call.answer(micWithGain.stream)
+
+          getNextClick($("button#call")).then(() => {
+            micGain.gain.setValueAtTime(1, 0)
+          })
+        })
       })
     })
-  })
+    .catch((err) => console.error("Could not get microphone audio", err))
 }
 
 if (mode === CALL) {
