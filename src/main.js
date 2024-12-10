@@ -33,6 +33,7 @@ if (mode === HOST) {
   sha256(window.location.hash.slice(1)).then((hostId) => {
     console.log("hostId", hostId)
     const peer = new Peer(hostId);
+    peer.on("error", console.error)
     peer.on("call", function(call) {
       $("button#call").removeAttribute("disabled")
       call.on("stream", playStream)
@@ -40,19 +41,21 @@ if (mode === HOST) {
       getNextClick($("button#call")).then(() => {
         getMicrophoneAudioStream()
           .then(micStream => call.answer(micStream))
-          .catch((err) => console.log("Could not get microphone audio", err))
+          .catch((err) => console.error("Could not get microphone audio", err))
       })
     })
   })
 }
 
 if (mode === CALL) {
-  $("button#call").removeAttribute("disabled")
+  const peer = new Peer();
+  peer.on("error", console.error)
+  peer.on("open", () => $("button#call").removeAttribute("disabled"))
   getNextClick($("button#call")).then(() => {
-    const peer = new Peer();
     Promise.all([
       sha256($("input").value),
-      getMicrophoneAudioStream(),
+      getMicrophoneAudioStream()
+        .catch((err) => console.error("Could not get microphone audio", err)),
     ]).then(([hostId, micStream]) => {
       console.log("calling peer", hostId)
       const call = peer.call(hostId, micStream)
