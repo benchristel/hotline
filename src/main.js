@@ -38,6 +38,7 @@ if (mode === HOST) {
       $("button#call").removeAttribute("disabled")
       call.on("stream", playStream)
       call.on("error", console.error)
+      call.on("close", () => $("button#call").setAttribute("disabled", "true"))
 
       getNextClick($("button#call")).then(() => {
         getMicrophoneAudioStream()
