@@ -18,7 +18,7 @@ const mode = window.location.hash.length > 1 ? HOST : CALL
 
 const button = $("button#call")
 
-function nextButtonClick() {
+async function getNextButtonClick() {
   return new Promise((resolve) => {
     button.addEventListener("click", onClick)
     function onClick() {
@@ -39,7 +39,7 @@ if (mode === HOST) {
       button.removeAttribute("disabled")
       call.on("stream", playStream)
 
-      nextButtonClick().then(() => {
+      getNextButtonClick().then(() => {
         getMicrophoneAudioStream()
           .then(micStream => call.answer(micStream))
           .catch((err) => console.log("Could not get microphone audio", err))
@@ -50,7 +50,7 @@ if (mode === HOST) {
 
 if (mode === CALL) {
   button.removeAttribute("disabled")
-  nextButtonClick().then(() => {
+  getNextButtonClick().then(() => {
     const peer = new Peer();
     Promise.all([
       sha256($("input").value),
