@@ -65,10 +65,18 @@ if (mode === HOST) {
 }
 
 if (mode === CALL) {
+  $("input").value = localStorage.callee || ""
+  $("input").addEventListener("change", () => {
+    localStorage.callee = $("input").value
+  })
   const peer = new Peer();
-  peer.on("error", console.error)
+  peer.on("error", (err) => {
+    console.error(err)
+    $("#error").innerText = $("input").value + " is offline."
+  })
   peer.on("open", () => $("button#call").removeAttribute("disabled"))
-  getNextClick($("button#call")).then(() => {
+  $("button#call").addEventListener("click", () => {
+    $("#error").innerText = ""
     Promise.all([
       sha256($("input").value),
       getMicrophoneAudioStream()
