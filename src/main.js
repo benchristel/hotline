@@ -43,7 +43,7 @@ if (mode === HOST) {
       const micWithGain = audioCtx.createMediaStreamDestination()
       micGain.connect(micWithGain)
 
-      sha256(window.location.hash.slice(1)).then((hostId) => {
+      makePeerId(window.location.hash.slice(1)).then((hostId) => {
         console.log("hostId", hostId)
         const peer = new Peer(hostId);
         peer.on("error", console.error)
@@ -78,7 +78,7 @@ if (mode === CALL) {
   $("button#call").addEventListener("click", () => {
     $("#error").innerText = ""
     Promise.all([
-      sha256($("input").value),
+      makePeerId($("input").value),
       getMicrophoneAudioStream()
         .catch((err) => console.error("Could not get microphone audio", err)),
     ]).then(([hostId, micStream]) => {
@@ -87,6 +87,10 @@ if (mode === CALL) {
       call.on("stream", playStream)
     })
   })
+}
+
+async function makePeerId(name) {
+  return sha256("com.benchristel.hotline." + name)
 }
 
 function playStream(audioStream) {
