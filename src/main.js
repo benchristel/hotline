@@ -45,7 +45,7 @@ if (mode === HOST) {
 
       makePeerId(window.location.hash.slice(1)).then((hostId) => {
         console.log("hostId", hostId)
-        const peer = new Peer(hostId);
+        const peer = new KeepAlivePeer(hostId);
         peer.on("error", console.error)
         peer.on("call", function(call) {
           $("button#call").removeAttribute("disabled")
@@ -87,6 +87,55 @@ if (mode === CALL) {
       call.on("stream", playStream)
     })
   })
+}
+
+class KeepAlivePeer {
+  constructor(hostId) {
+    this.peer = this._createPeer(hostId)
+    this.errorCallback = () => {}
+    this.callCallback = () => {}
+  }
+
+  on(event, cb) {
+    switch (event) {
+      case "error":
+        this.onError(cb)
+        break
+      case "call":
+        this.onCall(cb)
+        break
+    }
+  }
+
+  onError(cb) {
+    this.errorCallback = cb
+  }
+
+  onCall(cb) {
+    this.callCallback = cb
+  }
+
+  _createPeer(hostId) {
+    const peer = new Peer(hostId)
+
+    peer.on("error", (error) => {
+      if (peer.destroyed) {
+        return
+      }
+      peer.destroy()
+      this.peer = this._createPeer(hostId)
+      this.errorCallback(error)
+    })
+
+    peer.on("call", (call) => {
+      if (peer.destroyed) {
+        return
+      }
+      this.callCallback(call)
+    })
+
+    return peer
+  }
 }
 
 async function makePeerId(name) {
