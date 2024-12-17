@@ -52,7 +52,10 @@ if (mode === HOST) {
 
           call.on("stream", playStream)
           call.on("error", console.error)
-          call.on("close", () => $("button#call").setAttribute("disabled", "true"))
+          call.on("close", () => {
+            $("button#call").setAttribute("disabled", "true")
+            micGain.gain.setValueAtTime(0, 0)
+          })
           call.answer(micWithGain.stream)
 
           getNextClick($("button#call")).then(() => {
