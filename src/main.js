@@ -26,9 +26,13 @@ async function getNextClick(button) {
   })
 }
 
+let callCount = 0
+
 if (mode === HOST) {
   console.log("starting host")
   $("button#call").innerText = "Answer"
+  $("button#call").style.width = "7em"
+  $("#call-count").style.display = "block"
   $("input").parentElement.removeChild($("input"))
 
   const audioCtx = new AudioContext();
@@ -48,13 +52,19 @@ if (mode === HOST) {
         const peer = new KeepAlivePeer(hostId);
         peer.on("error", console.error)
         peer.on("call", function(call) {
+          callCount++
+          $("#call-count").innerText = "Active calls: " + callCount
           $("button#call").removeAttribute("disabled")
 
           call.on("stream", playStream)
           call.on("error", console.error)
           call.on("close", () => {
-            $("button#call").setAttribute("disabled", "true")
-            micGain.gain.setValueAtTime(0, 0)
+            callCount--
+            $("#call-count").innerText = "Active calls: " + callCount
+            if (callCount === 0) {
+              $("button#call").setAttribute("disabled", "true")
+              micGain.gain.setValueAtTime(0, 0)
+            }
           })
           call.answer(micWithGain.stream)
 
@@ -119,10 +129,13 @@ class KeepAlivePeer {
   }
 
   _createPeer(hostId) {
+    console.log("KeepAlivePeer: creating new peer " + hostId)
     const peer = new Peer(hostId)
 
     peer.on("error", (error) => {
+      console.log("KeepAlivePeer: got error", error)
       if (peer.destroyed) {
+        console.log("KeepAlivePeer: peer is already destroyed. Doing nothing.")
         return
       }
       peer.destroy()
@@ -131,7 +144,9 @@ class KeepAlivePeer {
     })
 
     peer.on("call", (call) => {
+      console.log("KeepAlivePeer: got call", call)
       if (peer.destroyed) {
+        console.log("KeepAlivePeer: peer is already destroyed. Doing nothing.")
         return
       }
       this.callCallback(call)
