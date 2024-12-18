@@ -102,7 +102,8 @@ if (mode === CALL) {
       console.log("calling peer", hostId)
       $("#status").className = "dialing"
       const call = peer.call(hostId, micStream)
-      call.on("stream", () => {
+      call.on("stream", (remoteStream) => {
+        playStream(remoteStream)
         $("#status").className = "connected"
         getNextClick($("button#call")).then(() => {
           if (call.open) {
