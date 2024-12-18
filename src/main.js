@@ -86,9 +86,13 @@ if (mode === CALL) {
   peer.on("error", (err) => {
     console.error(err)
     $("#error").innerText = $("input").value + " is offline."
+    $("#status").className = ""
+    getNextClick($("button#call")).then(initiateCall)
   })
   peer.on("open", () => $("button#call").removeAttribute("disabled"))
-  $("button#call").addEventListener("click", () => {
+  getNextClick($("button#call")).then(initiateCall)
+
+  function initiateCall() {
     $("#error").innerText = ""
     Promise.all([
       makePeerId($("input").value),
@@ -96,10 +100,25 @@ if (mode === CALL) {
         .catch((err) => console.error("Could not get microphone audio", err)),
     ]).then(([hostId, micStream]) => {
       console.log("calling peer", hostId)
+      $("#status").className = "dialing"
       const call = peer.call(hostId, micStream)
-      call.on("stream", playStream)
+      call.on("stream", () => {
+        $("#status").className = "connected"
+        getNextClick($("button#call")).then(() => {
+          if (call.open) {
+            call.close()
+            $("#status").className = ""
+            $("#error").innerText = ""
+            getNextClick($("button#call")).then(initiateCall)
+          }
+        })
+      })
+      call.on("error", (err) => {
+        $("#status").className = ""
+        $("#error").innerText = "Error: call dropped."
+      })
     })
-  })
+  }
 }
 
 class KeepAlivePeer {
@@ -157,7 +176,7 @@ class KeepAlivePeer {
 }
 
 async function makePeerId(name) {
-  return sha256("com.benchristel.hotline." + name)
+  return sha256("com.benchristel.hotline." + name.trim())
 }
 
 function playStream(audioStream) {

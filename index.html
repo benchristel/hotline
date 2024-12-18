@@ -43,10 +43,12 @@
         box-shadow: inset 0 1px 3px #000;
         border-bottom: 1px solid #666;
         background: #fff;
+        width: 9em;
       }
 
       button {
         padding-inline: 12px;
+        width: 5em;
         color: #ddd;
         background: linear-gradient(to bottom, #457, #235);
       }
@@ -70,12 +72,43 @@
         color: #efe;
         text-align: center;
       }
+
+      #status {
+        display: inline-block;
+        width: 1.2em;
+        height: 1.2em;
+        border-radius: 99em;
+        background: #555;
+        box-shadow: inset 0 -1px 6px #0008;
+        vertical-align: -3px;
+      }
+
+      #status.connected {
+        animation: 1s ease-in-out alternate infinite running blink;
+      }
+
+      @keyframes blink {
+        from {
+          background: #8f8;
+          box-shadow: inset 0 -1px 6px #0008, 0 0 8px #0f04;
+        }
+
+        to {
+          background: #6c6;
+          box-shadow: inset 0 -1px 6px #0008, 0 0 8px #0f01;
+        }
+      }
+
+      #status.dialing {
+        background: #fd5;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <input type="text">
       <button id="call" disabled="true">Call</button>
+      <span id="status"></span>
       <div id="call-count">
         Active calls: 0
       </div>
